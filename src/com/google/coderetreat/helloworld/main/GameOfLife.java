@@ -1,8 +1,6 @@
 package com.google.coderetreat.helloworld.main;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -19,8 +17,8 @@ public class GameOfLife {
 			this.y = y;
 		}
 		
-		public List<Coordinate> getNeighbors() {
-			final List<Coordinate> neighbors = new ArrayList<>();
+		public Set<Coordinate> getNeighbors() {
+			final Set<Coordinate> neighbors = new HashSet<>();
 			for (int i = x - 1; i <= x + 1; i++) {
 				for (int j = y - 1; j <= y + 1; j++) {
 					if (i == x && j == y) continue;
@@ -61,7 +59,7 @@ public class GameOfLife {
 		LIVE
 	}
 	
-	private final Set<Coordinate> nodes;
+	private Set<Coordinate> nodes;
 	
 	public GameOfLife () {
 		nodes = new HashSet<>();
@@ -69,6 +67,10 @@ public class GameOfLife {
 	
 	public State getNodeState(int x, int y) {
 		return nodes.contains(new Coordinate(x, y)) ? State.LIVE : State.DEAD;
+	}
+	
+	public State getNodeState(Coordinate node) {
+		return getNodeState(node.x, node.y);
 	}
 	
 	public void setNodeState(int x, int y, State state) {
@@ -82,6 +84,63 @@ public class GameOfLife {
 	}
 	
 	public void tick() {
+		final Set<Coordinate> newNodes = new HashSet<>();
+
+		for (Coordinate node : nodes) {
+			tick(newNodes, node);	
+		}
 		
+		this.nodes = newNodes;
+	}
+	
+	public void tick(final Set<Coordinate> newNodes, Coordinate node) {
+		Set<Coordinate> neighbors = node.getNeighbors();
+		Set<Coordinate> liveNeighbors = findLiveNodes(neighbors);
+		
+		if (nodeLivesNext(node, liveNeighbors.size()))
+			newNodes.add(node);
+		else if (liveNeighbors.isEmpty())
+			return;
+
+		for (Coordinate neighbor : neighbors) {
+			tick(newNodes, neighbor);
+		}
+	}
+	
+	private Set<Coordinate> findLiveNodes(Set<Coordinate> nodes) {
+		Set<Coordinate> liveNodes = new HashSet<>();
+		for (Coordinate node : nodes) {
+			if (State.LIVE == getNodeState(node)) {
+				liveNodes.add(node);
+			}
+		}
+		
+		return liveNodes;
+	}
+
+	public boolean nodeLivesNext(Coordinate node, int numNeighbors) {
+		return State.LIVE == getNodeState(node.x, node.y) &&
+				numNeighbors == 2 || numNeighbors == 3;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		
+		return sb.toString();
+	}
+	
+	public static void main(String[] args) {
+		GameOfLife game = new GameOfLife();
+		
+		game.setNodeState(-1, 0, State.LIVE);
+		game.setNodeState(0, 0, State.LIVE);
+		game.setNodeState(1, 0, State.LIVE);
+		
+		System.out.println(game);
+		
+		game.tick();
+		
+		System.out.println(game);
 	}
 }
